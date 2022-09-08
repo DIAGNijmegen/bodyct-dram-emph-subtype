@@ -34,5 +34,12 @@ Tab 1. Centrilobular and ParaseptalEmphysema Severity Scores Classification Accu
 |Ours (classification)  |      PSE       |     59.12     |  57.12   |    42.03 (40.21-43.85)     |
 |Ours (regression)|      CLE       |     51.32     |  49.61   |      64.24 (63.14-65.35)       |
 |Ours (regression)| PSE| 64.62 |  60.74   |       52.06 (50.40-53.73)         |
+
+## Qualitative Results
+The first row showcases the dense regression activation maps (dRAM) for centrilobular emphysema, and the second row illustrates the dRAM for paraseptal emphysema.
+![Screenshot](https://github.com/DIAGNijmegen/bodyct-dram-emph-subtype/blob/main/showcase.png)
+
+[MIT](https://choosealicense.com/licenses/mit/)
+
 ## License
 [MIT](https://choosealicense.com/licenses/mit/)

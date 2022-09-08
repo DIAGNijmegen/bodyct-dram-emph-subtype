@@ -12,33 +12,27 @@
 
 ## Introduction
 
-![Screenshot](https://github.com/DIAGNijmegen/spgnn/blob/main/airway_screenshot.png)
+![Screenshot](https://github.com/DIAGNijmegen/bodyct-dram-emph-subtype/blob/main/figure1.png)
 
-We present a novel graph-based approach for labeling the anatomical branches of a given airway tree segmentation. The proposed method formulates airway labeling as a branch classification problem in the airway tree graph, where branch features are extracted using convolutional neural networks (CNN) and enriched using graph neural networks. Our graph neural network is structure-aware by having each node aggregate information from its local neighbors and position-aware by encoding node positions in the graph. The algorithm is also publicly available as an <a href="https://grand-challenge.org/algorithms/airway-anatomical-labeling/">algorithm</a> served on the grand-challenge website.
+The proposed model can automatically identify severity-based emphysema subtypes according to Fleischner visual scoring system by analyzing a given CT scan. The proposed model outperformed the existing method on the presented dataset with improved interpretability.
 
 ## Usage
- - Please check `/docker_base/install_files/requirements.in` for the required packages/versions to install.
- - To build a docker image for this algorithm, `cd` into `/docker_base/`, and run `docker build --tag=spgnn .`, please also check the `Dockerfile` regarding which Cuda, Python, and Cudnn versions are installed.
- - Regarding DGL library, in the `Dockerfile`, we build it from the latest sourcecode. We suggest you at least install 0.6.x. 0.4.x cannot be used because of bugs related to the implementation of graph attention networks.
- - Our method is a two-stage method. Therefore, you need to first train the CNN network
- - Before training, you can pre-build and store airway graphs to files. To do so, you run the function `generate_tree_data` in `prepare_data.py`. This function will generate trees and store them to `/derived/conv` under your dataset root path. Once trees are built, you can start training your CNN models. Once CNNs are trained, you can run the function `generate_conv_embeddings` in `prepare_data.py` to store CNN features to files. This allows you to train GNN networks. 
- - For training, run train.py.
- - For testing, run test.py.
- - For visualization using t-SNE (Fig.5 in the paper), run plot_embeddings.py.
- - For each experiment, you use a specfic setting file located in `/exp_settings` as the input argument pass to your training or testing script using `--smp=`. In the setting file, you define training hyper-parameters, network architectures, and paths to your data.
+ - Use `train.py` for training. The training, testing and prediction scripts were all implemented using pytorch, and pytorch-lightning library.
+ - Please check https://github.com/Tencent/MedicalNet for how to load pretrained ResNet weights.
+ - We provide the classification and regression training strategies. Please switch to `med3d` in `--model_arch` cli argument.
+ - The class and regression activation maps were generated during training or testing.
+ - For the Grand-challenge [algorithm](https://grand-challenge.org/algorithms/weakly-supervised-emphysema-subtyping/), we use the prediction mode in pytorch-lightning for outputs. 
 
 # Main Results
-Tab 1. Branch Classification Accuracy (ACC(%)) and Topological Distance (TD) of the CNN, GATS, and the proposed SPGNN methods (in mean ± standard deviation). The overall branch classification accuracy is measured over all target labels on average. Multiply accumulate operations (MACs) and the number of parameters are shown as measures of computational complexity. Testing time consumption indicates the run-time efficiency. The overall topological distance is the average of TD
-on all target labels. Boldface denotes the best result. 
+Tab 1. Centrilobular and ParaseptalEmphysema Severity Scores Classification Accuracy (ACC(%)) and F-measurement, in comparison with the Fleischner algorithm.
 
-|Method     |ACC (%)   |TD|MACS |#Params|Testing time(second)|
-|:---------:|:---:|:-----:|:----:|:----:|:----:|
-|CNN |83.83±7.37  |2.41±0.67|**6.42G**|**67.49M**|**14.25±9.65**|
-|GATS  |89.84±5.44|2.02±0.61|6.62G|69.52M|16.12±8.69|
-|**SPGNN**|**91.18±4.97**|**1.80±0.50**|6.67G|70.09M|16.98±9.79|
 
+|Method     |    Subtype     |   ACC (\%)    | F1-score | Linear Weighted Kappa(95\% CI) |
+|:---------:|:--------------:|:-------------:|:--------:|:---------------------:|
+|The Fleischner algorithm |      CLE       |      45       |    -     |          60           |
+|Ours (classification)  |      CLE       |     52.23     |  51.00   |  64.29 (63.16-65.42)     |
+|Ours (classification)  |      PSE       |     59.12     |  57.12   |    42.03 (40.21-43.85)     |
+|Ours (regression)|      CLE       |     51.32     |  49.61   |      64.24 (63.14-65.35)       |
+|Ours (regression)| PSE| 64.62 |  60.74   |       52.06 (50.40-53.73)         |
 ## License
 [MIT](https://choosealicense.com/licenses/mit/)
-
-## Some implementations are inspired by
-[LSPE](https://github.com/vijaydwivedi75/gnn-lspe)

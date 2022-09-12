@@ -8,8 +8,8 @@ from scipy import ndimage
 from pathlib import Path
 import torch
 
-class SubtypingInference(Dataset):
 
+class SubtypingInference(Dataset):
     label_to_cle = {
         0: "absent",
         1: "trace",
@@ -25,7 +25,6 @@ class SubtypingInference(Dataset):
         2: "substantial",
     }
 
-
     def __init__(self, scan_path, lobe_path, transforms=None,
                  keep_sorted=True, crop_border=5):
         super(SubtypingInference, self).__init__()
@@ -35,18 +34,17 @@ class SubtypingInference(Dataset):
         self.transforms = transforms
         self.crop_border = crop_border
         all_scans = glob.glob(self.scan_path + '/*.mha', recursive=False)
-        if keep_sorted:
-            self.series_uids = sorted([Path(scan_file).stem for scan_file in all_scans])
-        else:
-            self.series_uids = [Path(scan_file).stem for scan_file in all_scans]
+        assert len(all_scans) == 1 # for grand-challenge
 
+        self.scan_file = all_scans[0]
+        self.lobe_file = glob.glob(self.lobe_path + '/*.mha', recursive=False)[0]
         self.scan_meta_cache = {}
 
     def __len__(self):
-        return len(self.series_uids)
+        return 1
 
     def __getitem__(self, index):
-        d = self.get_data(self.series_uids[index])
+        d = self.get_data(index)
         return d
 
     def read_image(self, path):
@@ -57,10 +55,11 @@ class SubtypingInference(Dataset):
         scan = sitk.GetArrayFromImage(sitk_image)
         return scan, origin, spacing, direction
 
-    def get_data(self, series_uid):
-        scan, origin, spacing, direction = self.read_image(self.scan_path + f'/{series_uid}.mha')
+    def get_data(self, index):
+        series_uid = Path(self.scan_file).stem # dummy name, should be ignored.
+        scan, origin, spacing, direction = self.read_image(self.scan_file)
         original_size = scan.shape
-        lobe, origin_, spacing_, direction_ = self.read_image(self.lobe_path + f'/{series_uid}.mha')
+        lobe, origin_, spacing_, direction_ = self.read_image(self.lobe_file)
         assert lobe.shape == scan.shape
         lung = lobe > 0
         dlung = ndimage.binary_dilation(lung, ndimage.generate_binary_structure(3, 3), iterations=2)
@@ -71,7 +70,7 @@ class SubtypingInference(Dataset):
         ret = {
             "image": scan.astype(np.int16),
             "lung_mask": lung.astype(np.bool),
-            "crop_slice": np.asarray([(ss.start, ss.stop)for ss in slices]),
+            "crop_slice": np.asarray([(ss.start, ss.stop) for ss in slices]),
             "original_size": np.asarray(original_size),
             "uid": series_uid
         }
@@ -119,7 +118,6 @@ class COPDGeneSubtyping(Dataset):
         self.series_uids = series_uids
         self.meta, _ = read_csv_in_dict(archive_path + '/merged.csv', "SeriesInstanceUID")
         self.subtyping_labels = {}
-
 
         for series_uid in series_uids:
             cle = int(float(self.meta[series_uid]['CT_Visual_Emph_Severity_P1']))

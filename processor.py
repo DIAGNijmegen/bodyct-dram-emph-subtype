@@ -12,23 +12,22 @@ from functools import reduce
 import json
 
 matplotlib.use('Agg')
-# logging.basicConfig(
-#     level=logging.INFO,
-#     format="%(asctime)s [%(levelname)s] %(message)s",
-#     handlers=[
-#         logging.FileHandler("/output/process.log"),
-#         logging.StreamHandler()
-#     ]
-# )
-
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
     handlers=[
-        logging.FileHandler("D:/workspace/process.log"),
         logging.StreamHandler()
     ]
 )
+
+# logging.basicConfig(
+#     level=logging.INFO,
+#     format="%(asctime)s [%(levelname)s] %(message)s",
+#     handlers=[
+#         logging.FileHandler("D:/workspace/process.log"),
+#         logging.StreamHandler()
+#     ]
+# )
 
 from models import ScanRegLightningModule, SubtypeDataModule
 from dataset import COPDGeneSubtyping
@@ -46,16 +45,19 @@ def ratio_to_label(ratio, ratio_mapping):
 def run_testing_job():
 
 
-    input_image_path = r'D:\workspace\datasets\COPDGene\images/'
-    input_lobe_path = r'D:\workspace\datasets\COPDGene\lobes/'
-    output_path = r'D:\workspace\datasets\COPDGene\outputs/'
+    # input_image_path = r'D:\workspace\datasets\COPDGene\images/'
+    # input_lobe_path = r'D:\workspace\datasets\COPDGene\lobes/'
+    # output_path = r'D:\workspace\datasets\COPDGene\outputs/'
+    #
+    # # ckp_path = 'best.pth'
+    # ckp_path = r'D:\newckp.ckpt'
 
-    ckp_path = r'D:\newckp.ckpt'
-
-    # input_image_path = '/input/images/ct/'
-    # input_lobe_path = '/input/images/pulmonary-lobes/'
-    # output_path = '/output/images/'
-    # ckp_path = 'newckp.ckpt'
+    input_image_path = '/input/images/ct/'
+    input_lobe_path = '/input/images/pulmonary-lobes/'
+    output_json_path = '/output/'
+    output_centrilobular = '/output/images/emphysema-heatmap/'
+    output_paraseptal = '/output/images/paraseptal-emphysema-heatmap/'
+    ckp_path = 'newckp.ckpt'
     parser = ArgumentParser()
     parser.add_argument("--ngpus", default=1, type=int)
     parser.add_argument("--model_arch", default="med3ddram", type=str)
@@ -85,8 +87,7 @@ def run_testing_job():
     trainer = pytorch_lightning.Trainer.from_argparse_args(args, strategy=ddp,
                                                            sync_batchnorm=True,
                                                            resume_from_checkpoint=None,
-                                                           devices=args.ngpus,
-                                                           default_root_dir=output_path)
+                                                           devices=args.ngpus)
     logging.info("starting the inference.")
     predictions = trainer.predict(module, data_module)
 
@@ -120,11 +121,11 @@ def run_testing_job():
         full_pse = np.zeros(original_size)
         full_pse[tuple([slice(s[0].item(), s[1].item()) for s in crop_slice])] = pse_dense_out_np
         metrics['runtime_seconds'] = 1.0
-        metrics['cle_severity_score'] = ratio_to_label(cle_precentage.item(), COPDGeneSubtyping.cle_ratio_map)
-        metrics['cle_lesion_percentage_per_lung'] = cle_precentage.item()
+        metrics['cle_severity_score'] = "{:d}".format(ratio_to_label(cle_precentage.item(), COPDGeneSubtyping.cle_ratio_map))
+        metrics['cle_lesion_percentage_per_lung'] = "{:.5f}".format(cle_precentage.item())
 
-        metrics['pse_severity_score'] = ratio_to_label(pse_precentage.item(), COPDGeneSubtyping.pse_ratio_map)
-        metrics['pse_lesion_percentage_per_lung'] = pse_precentage.item()
+        metrics['pse_severity_score'] = "{:d}".format(ratio_to_label(pse_precentage.item(), COPDGeneSubtyping.pse_ratio_map))
+        metrics['pse_lesion_percentage_per_lung'] = "{:.5f}".format(pse_precentage.item())
 
         results.append({
             'entity': uid,
@@ -134,22 +135,23 @@ def run_testing_job():
         full_cle_w = windowing(full_cle, from_span=(0, 1)).astype(np.uint8)
         scan_meta = data_module.datasets[RunningStage.PREDICTING].scan_meta_cache[uid]
 
-        write_array_to_mha_itk(output_path, [full_cle_w],
+        write_array_to_mha_itk(output_centrilobular, [full_cle_w],
                                [uid], type=np.uint8,
                                origin=scan_meta["origin"][::-1],
                                direction=np.asarray(scan_meta["direction"]).reshape(3, 3)[
                                          ::-1].flatten().tolist(),
                                spacing=scan_meta["spacing"][::-1])
         full_pse_w = windowing(full_pse, from_span=(0, 1)).astype(np.uint8)
-        write_array_to_mha_itk(output_path, [full_pse_w],
-                               [uid + '_pse'], type=np.uint8,
+        write_array_to_mha_itk(output_paraseptal, [full_pse_w],
+                               [uid], type=np.uint8,
                                origin=scan_meta["origin"][::-1],
                                direction=np.asarray(scan_meta["direction"]).reshape(3, 3)[
                                          ::-1].flatten().tolist(),
                                spacing=scan_meta["spacing"][::-1])
 
 
-    json_path = os.path.join(output_path, 'results.json')
+
+    json_path = os.path.join(output_json_path, 'results.json')
     with open(json_path, 'w') as f:
         print('results:', results)
         j = json.dumps(results)

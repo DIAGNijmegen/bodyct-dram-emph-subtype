@@ -22,8 +22,6 @@ def intensity_window(img: torch.Tensor, from_span=(-1150, 350), to_span=(0, 255)
     img = torch.clamp(img, min=min_input, max=max_input)
     img = ((img - min_input) / (max_input - min_input)) * (to_span[1] - to_span[0]) + to_span[0]
     if output_dtype is not None:
-        if output_dtype != origin_dtype:
-            warnings.warn(f"intensity_rescale converting {origin_dtype} to {output_dtype}. ")
         img = img.type(output_dtype)
     return img
 

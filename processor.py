@@ -1,4 +1,5 @@
-import sys
+import warnings
+warnings.filterwarnings("ignore", category=DeprecationWarning)
 import os
 import logging
 import matplotlib
@@ -31,6 +32,7 @@ logging.basicConfig(
 
 from models import ScanRegLightningModule, SubtypeDataModule
 from dataset import COPDGeneSubtyping
+from pathlib import Path
 from utils import write_array_to_mha_itk, windowing, draw_mask_tile_singleview_heatmap
 from pytorch_lightning.trainer.states import RunningStage
 
@@ -43,8 +45,6 @@ def ratio_to_label(ratio, ratio_mapping):
 
 
 def run_testing_job():
-
-
     # input_image_path = r'D:\workspace\datasets\COPDGene\images/'
     # input_lobe_path = r'D:\workspace\datasets\COPDGene\lobes/'
     # output_path = r'D:\workspace\datasets\COPDGene\outputs/'
@@ -55,8 +55,12 @@ def run_testing_job():
     input_image_path = '/input/images/ct/'
     input_lobe_path = '/input/images/pulmonary-lobes/'
     output_json_path = '/output/'
-    output_centrilobular = '/output/images/emphysema-heatmap/'
+    output_centrilobular = '/output/images/centrilobular-emphysema-heatmap/'
     output_paraseptal = '/output/images/paraseptal-emphysema-heatmap/'
+
+    Path(output_centrilobular).mkdir(parents=True, exist_ok=True)
+    Path(output_paraseptal).mkdir(parents=True, exist_ok=True)
+
     ckp_path = 'newckp.ckpt'
     parser = ArgumentParser()
     parser.add_argument("--ngpus", default=1, type=int)
@@ -80,10 +84,9 @@ def run_testing_job():
 
     checkpoint = torch.load(ckp_path, map_location='cpu')
 
-
     load_state_dict_greedy(module, checkpoint['state_dict'])
     data_module = SubtypeDataModule(args)
-    ddp = DDPStrategy(process_group_backend="gloo", find_unused_parameters=False)
+    ddp = DDPStrategy(process_group_backend="nccl", find_unused_parameters=False)
     trainer = pytorch_lightning.Trainer.from_argparse_args(args, strategy=ddp,
                                                            sync_batchnorm=True,
                                                            resume_from_checkpoint=None,
@@ -112,19 +115,22 @@ def run_testing_job():
         cle_dense_out = torch.nn.functional.interpolate(cle_dense_out.unsqueeze(0),
                                                         size=recon_size, mode='trilinear', align_corners=True)
         cle_dense_out_np = cle_dense_out.squeeze(0).squeeze(0).cpu().numpy()
+        cle_dense_out_np[cle_dense_out_np < np.percentile(cle_dense_out_np, 20)] = 0.0
         full_cle = np.zeros(original_size)
         full_cle[tuple([slice(s[0].item(), s[1].item()) for s in crop_slice])] = cle_dense_out_np
 
         pse_dense_out = torch.nn.functional.interpolate(pse_dense_out.unsqueeze(0),
                                                         size=recon_size, mode='trilinear', align_corners=True)
         pse_dense_out_np = pse_dense_out.squeeze(0).squeeze(0).cpu().numpy()
+        pse_dense_out_np[pse_dense_out_np < np.percentile(pse_dense_out_np, 20)] = 0.0
         full_pse = np.zeros(original_size)
         full_pse[tuple([slice(s[0].item(), s[1].item()) for s in crop_slice])] = pse_dense_out_np
-        metrics['runtime_seconds'] = 1.0
-        metrics['cle_severity_score'] = "{:d}".format(ratio_to_label(cle_precentage.item(), COPDGeneSubtyping.cle_ratio_map))
+        metrics['cle_severity_score'] = "{:d}".format(
+            ratio_to_label(cle_precentage.item(), COPDGeneSubtyping.cle_ratio_map))
         metrics['cle_lesion_percentage_per_lung'] = "{:.5f}".format(cle_precentage.item())
 
-        metrics['pse_severity_score'] = "{:d}".format(ratio_to_label(pse_precentage.item(), COPDGeneSubtyping.pse_ratio_map))
+        metrics['pse_severity_score'] = "{:d}".format(
+            ratio_to_label(pse_precentage.item(), COPDGeneSubtyping.pse_ratio_map))
         metrics['pse_lesion_percentage_per_lung'] = "{:.5f}".format(pse_precentage.item())
 
         results.append({
@@ -149,9 +155,7 @@ def run_testing_job():
                                          ::-1].flatten().tolist(),
                                spacing=scan_meta["spacing"][::-1])
 
-
-
-    json_path = os.path.join(output_json_path, 'results.json')
+    json_path = os.path.join(output_json_path, 'emphysema-subtype.json')
     with open(json_path, 'w') as f:
         print('results:', results)
         j = json.dumps(results)

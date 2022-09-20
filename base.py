@@ -1,14 +1,14 @@
 import json
 import numbers
 import random
-import warnings
+
 from typing import Any
 from typing import Dict
 from typing import Optional
 from typing import Set
 from typing import Tuple
 from typing import Union
-from warnings import warn
+
 
 import numpy as np
 import torch
@@ -76,10 +76,6 @@ class BaseTransform:
             data_dict: the input data dictionary on which the transform will be applied, some transforms
             require knowing the data shape in order to generate function parameters.
         """
-        warnings.warn(
-            f"No random parameters are set in {self.get_class_fullname()}, "
-            f"with input tensor keys:{data_dict.keys()}"
-        )
         return {}
 
     def __call__(self, data_dict: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
@@ -133,10 +129,7 @@ class BaseTransform:
         elif "points" in key:
             data = self.apply_to_point_cloud(data)
         else:
-            warn(
-                f"{key} is not in the supported semantic types ['image', 'mask', 'box', 'points']"
-                f", no transform applied."
-            )
+            pass
         return data
 
     def check_positive_numbers_or_range(

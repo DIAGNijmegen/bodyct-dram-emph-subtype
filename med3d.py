@@ -8,30 +8,30 @@ import numpy as np
 
 
 def normal_wrapper(normal_method, in_ch, in_ch_div=2):
-    if normal_method is "bn":
+    if normal_method == "bn":
         return nn.BatchNorm3d(in_ch)
-    elif normal_method is "bnt":
+    elif normal_method == "bnt":
         # this should be used when batch_size=1
         return nn.BatchNorm3d(in_ch, affine=True, track_running_stats=False)
-    elif normal_method is "bntna":
+    elif normal_method == "bntna":
         # this should be used when batch_size=1
         return nn.BatchNorm3d(in_ch, affine=False, track_running_stats=False)
-    elif normal_method is "ln":
+    elif normal_method == "ln":
         return nn.GroupNorm(1, in_ch)
-    elif normal_method is "lnna":
+    elif normal_method == "lnna":
         return nn.GroupNorm(1, in_ch, affine=False)
-    elif normal_method is "in":
+    elif normal_method == "in":
         return nn.GroupNorm(in_ch, in_ch)
-    elif normal_method is "sbn":
+    elif normal_method == "sbn":
         return nn.SyncBatchNorm(in_ch)
     else:
         raise NotImplementedError
 
 
 def act_wrapper(act_method, num_parameters=1, init=0.25):
-    if act_method is "relu":
+    if act_method == "relu":
         return nn.ReLU(inplace=True)
-    elif act_method is "prelu":
+    elif act_method == "prelu":
         return nn.PReLU(num_parameters, init)
     else:
         raise NotImplementedError
@@ -234,7 +234,7 @@ class ResNetSegCls(nn.Module):
 
         for m in self.modules():
             if isinstance(m, nn.Conv3d):
-                m.weight = nn.init.kaiming_normal(m.weight, mode='fan_out')
+                nn.init.kaiming_normal_(m.weight, mode='fan_out')
             elif isinstance(m, nn.BatchNorm3d):
                 m.weight.data.fill_(1)
                 m.bias.data.zero_()
@@ -333,7 +333,7 @@ class ResNetSegReg(nn.Module):
 
         for m in self.modules():
             if isinstance(m, nn.Conv3d):
-                m.weight = nn.init.kaiming_normal(m.weight, mode='fan_out')
+                nn.init.kaiming_normal_(m.weight, mode='fan_out')
             elif isinstance(m, nn.BatchNorm3d):
                 m.weight.data.fill_(1)
                 m.bias.data.zero_()
@@ -379,7 +379,7 @@ class ResNetSegReg(nn.Module):
         xup1 = self.us1(x4, x1)
         xup2 = self.us2(xup1, x)
         xup3 = self.us3(xup2)
-        dense_outs = [F.sigmoid(fc(xup3)) for fc in self.fcs]
+        dense_outs = [torch.sigmoid(fc(xup3)) for fc in self.fcs]
         lungs = F.interpolate(lungs, xup3.shape[-3:], mode='nearest')
         reg_outs = [(dout * lungs).view(B, -1).sum(dim=-1) / lungs.view(B, -1).sum(dim=-1) for dout in dense_outs]
         return dense_outs, reg_outs
@@ -430,7 +430,7 @@ class ResNet(nn.Module):
         self.fc = nn.Conv3d(512, self.n_classes, kernel_size=1, padding=0, stride=1)
         for m in self.modules():
             if isinstance(m, nn.Conv3d):
-                m.weight = nn.init.kaiming_normal(m.weight, mode='fan_out')
+                nn.init.kaiming_normal_(m.weight, mode='fan_out')
             elif isinstance(m, nn.BatchNorm3d):
                 m.weight.data.fill_(1)
                 m.bias.data.zero_()

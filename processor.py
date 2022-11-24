@@ -54,7 +54,9 @@ def run_testing_job():
 
     input_image_path = '/input/images/ct/'
     input_lobe_path = '/input/images/pulmonary-lobes/'
-    output_json_path = '/output/'
+    centrilobular_json_path = '/output/centrilobular-emphysema-score.json'
+    paraseptal_json_path = '/output/araseptal-emphysema-score.json'
+    output_json_path ='/output/results.json'
     output_centrilobular = '/output/images/centrilobular-emphysema-heatmap/'
     output_paraseptal = '/output/images/paraseptal-emphysema-heatmap/'
 
@@ -155,8 +157,21 @@ def run_testing_job():
                                          ::-1].flatten().tolist(),
                                spacing=scan_meta["spacing"][::-1])
 
-    json_path = os.path.join(output_json_path, 'emphysema-subtype.json')
-    with open(json_path, 'w') as f:
+    with open(centrilobular_json_path, 'w') as f:
+        j = json.dumps({
+            'score': int(float(results[0]['metrics']['cle_severity_score'])),
+            'percentage': float(results[0]['metrics']['cle_lesion_percentage_per_lung'])
+        })
+        f.write(j)
+
+    with open(paraseptal_json_path, 'w') as f:
+        j = json.dumps({
+            'score': int(float(results[0]['metrics']['pse_severity_score'])),
+            'percentage': float(results[0]['metrics']['pse_lesion_percentage_per_lung'])
+        })
+        f.write(j)
+
+    with open(output_json_path, 'w') as f:
         print('results:', results)
         j = json.dumps(results)
         f.write(j)

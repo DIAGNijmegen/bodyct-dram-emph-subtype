@@ -63,7 +63,7 @@ def run_testing_job():
     Path(output_centrilobular).mkdir(parents=True, exist_ok=True)
     Path(output_paraseptal).mkdir(parents=True, exist_ok=True)
 
-    ckp_path = 'newckp.ckpt'
+    ckp_path = 'best.ckpt'
     parser = ArgumentParser()
     parser.add_argument("--ngpus", default=1, type=int)
     parser.add_argument("--model_arch", default="med3ddram", type=str)

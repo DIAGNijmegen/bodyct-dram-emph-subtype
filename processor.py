@@ -1,7 +1,12 @@
 import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning)
-import os
 import logging
+# configure logging at the root level of Lightning
+logging.getLogger("pytorch_lightning").setLevel(logging.ERROR)
+
+# configure logging on module level, redirect to file
+logger = logging.getLogger("pytorch_lightning.core")
+logger.addHandler(logging.FileHandler("core.log"))
 import matplotlib
 from argparse import ArgumentParser
 import pytorch_lightning
@@ -14,26 +19,17 @@ import json
 
 matplotlib.use('Agg')
 logging.basicConfig(
-    level=logging.INFO,
+    level=logging.ERROR,
     format="%(asctime)s [%(levelname)s] %(message)s",
     handlers=[
         logging.StreamHandler()
     ]
 )
 
-# logging.basicConfig(
-#     level=logging.INFO,
-#     format="%(asctime)s [%(levelname)s] %(message)s",
-#     handlers=[
-#         logging.FileHandler("D:/workspace/process.log"),
-#         logging.StreamHandler()
-#     ]
-# )
-
 from models import ScanRegLightningModule, SubtypeDataModule
 from dataset import COPDGeneSubtyping
 from pathlib import Path
-from utils import write_array_to_mha_itk, windowing, draw_mask_tile_singleview_heatmap
+from utils import write_array_to_mha_itk, windowing
 from pytorch_lightning.trainer.states import RunningStage
 
 
@@ -56,7 +52,7 @@ def run_testing_job():
     input_lobe_path = '/input/images/pulmonary-lobes/'
     centrilobular_json_path = '/output/centrilobular-emphysema-score.json'
     paraseptal_json_path = '/output/araseptal-emphysema-score.json'
-    output_json_path ='/output/results.json'
+    # output_json_path ='/output/results.json'
     output_centrilobular = '/output/images/centrilobular-emphysema-heatmap/'
     output_paraseptal = '/output/images/paraseptal-emphysema-heatmap/'
 
@@ -129,11 +125,11 @@ def run_testing_job():
         full_pse[tuple([slice(s[0].item(), s[1].item()) for s in crop_slice])] = pse_dense_out_np
         metrics['cle_severity_score'] = "{:d}".format(
             ratio_to_label(cle_precentage.item(), COPDGeneSubtyping.cle_ratio_map))
-        metrics['cle_lesion_percentage_per_lung'] = "{:.5f}".format(cle_precentage.item())
+        metrics['cle_lesion_percentage_per_lung'] = "{:.3f}".format(cle_precentage.item())
 
         metrics['pse_severity_score'] = "{:d}".format(
             ratio_to_label(pse_precentage.item(), COPDGeneSubtyping.pse_ratio_map))
-        metrics['pse_lesion_percentage_per_lung'] = "{:.5f}".format(pse_precentage.item())
+        metrics['pse_lesion_percentage_per_lung'] = "{:.3f}".format(pse_precentage.item())
 
         results.append({
             'entity': uid,
@@ -171,10 +167,10 @@ def run_testing_job():
         })
         f.write(j)
 
-    with open(output_json_path, 'w') as f:
-        print('results:', results)
-        j = json.dumps(results)
-        f.write(j)
+    # with open(output_json_path, 'w') as f:
+    #     print('results:', results)
+    #     j = json.dumps(results)
+    #     f.write(j)
 
 
 if __name__ == "__main__":

@@ -87,6 +87,7 @@ def run_testing_job():
     ddp = DDPStrategy(process_group_backend="nccl", find_unused_parameters=False)
     trainer = pytorch_lightning.Trainer.from_argparse_args(args, strategy=ddp,
                                                            sync_batchnorm=True,
+                                                           logger=False,
                                                            resume_from_checkpoint=None,
                                                            devices=args.ngpus)
     logging.info("starting the inference.")

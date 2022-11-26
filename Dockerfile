@@ -93,6 +93,7 @@ RUN groupadd -r algorithm && useradd -m --no-log-init -r -g algorithm algorithm
 
 RUN mkdir -p /opt/algorithm /input /output \
     && chown algorithm:algorithm /opt/algorithm /input /output
+RUN mkdir /opt/algorithm/lightning_logs
 
 RUN ldconfig
 

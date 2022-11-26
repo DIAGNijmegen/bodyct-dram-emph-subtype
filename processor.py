@@ -52,7 +52,7 @@ def run_testing_job():
     input_lobe_path = '/input/images/pulmonary-lobes/'
     centrilobular_json_path = '/output/centrilobular-emphysema-score.json'
     paraseptal_json_path = '/output/araseptal-emphysema-score.json'
-    # output_json_path ='/output/results.json'
+    output_json_path ='/output/results.json'
     output_centrilobular = '/output/images/centrilobular-emphysema-heatmap/'
     output_paraseptal = '/output/images/paraseptal-emphysema-heatmap/'
 
@@ -167,10 +167,10 @@ def run_testing_job():
         })
         f.write(j)
 
-    # with open(output_json_path, 'w') as f:
-    #     print('results:', results)
-    #     j = json.dumps(results)
-    #     f.write(j)
+    with open(output_json_path, 'w') as f:
+        print('results:', results)
+        j = json.dumps(results)
+        f.write(j)
 
 
 if __name__ == "__main__":

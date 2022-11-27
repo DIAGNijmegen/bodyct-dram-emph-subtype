@@ -1,12 +1,10 @@
 import warnings
 warnings.filterwarnings("ignore")
 import logging
-# configure logging at the root level of Lightning
-logging.getLogger("pytorch_lightning").setLevel(logging.ERROR)
 
-# configure logging on module level, redirect to file
-logger = logging.getLogger("pytorch_lightning.core")
-logger.addHandler(logging.FileHandler("core.log"))
+logging.getLogger("pytorch_lightning").setLevel(logging.CRITICAL)
+
+
 import matplotlib
 from argparse import ArgumentParser
 import pytorch_lightning
@@ -18,13 +16,7 @@ from functools import reduce
 import json
 
 matplotlib.use('Agg')
-logging.basicConfig(
-    level=logging.ERROR,
-    format="%(asctime)s [%(levelname)s] %(message)s",
-    handlers=[
-        logging.StreamHandler()
-    ]
-)
+
 
 from models import ScanRegLightningModule, SubtypeDataModule
 from dataset import COPDGeneSubtyping

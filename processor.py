@@ -106,14 +106,14 @@ def run_testing_job():
         cle_dense_out = torch.nn.functional.interpolate(cle_dense_out.unsqueeze(0),
                                                         size=recon_size, mode='trilinear', align_corners=True)
         cle_dense_out_np = cle_dense_out.squeeze(0).squeeze(0).cpu().numpy()
-        cle_dense_out_np[cle_dense_out_np < np.percentile(cle_dense_out_np, 20)] = 0.0
+        # cle_dense_out_np[cle_dense_out_np < np.percentile(cle_dense_out_np, 20)] = 0.0
         full_cle = np.zeros(original_size)
         full_cle[tuple([slice(s[0].item(), s[1].item()) for s in crop_slice])] = cle_dense_out_np
 
         pse_dense_out = torch.nn.functional.interpolate(pse_dense_out.unsqueeze(0),
                                                         size=recon_size, mode='trilinear', align_corners=True)
         pse_dense_out_np = pse_dense_out.squeeze(0).squeeze(0).cpu().numpy()
-        pse_dense_out_np[pse_dense_out_np < np.percentile(pse_dense_out_np, 20)] = 0.0
+        # pse_dense_out_np[pse_dense_out_np < np.percentile(pse_dense_out_np, 20)] = 0.0
         full_pse = np.zeros(original_size)
         full_pse[tuple([slice(s[0].item(), s[1].item()) for s in crop_slice])] = pse_dense_out_np
         metrics['cle_severity_score'] = "{:d}".format(

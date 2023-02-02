@@ -27,6 +27,7 @@ def run_training_job():
     parser.add_argument("--weight_decay", default=1e-5, type=float)
     parser.add_argument("--ckp", type=str, default=None)
     # Data parameters.
+    parser.add_argument("--target_size", default=(128, 224, 288), type=tuple)
     parser.add_argument("--data_path", default="/share/cached/COPDGene/", type=str)
     parser.add_argument("--train_csv",
                         default="/mnt/netcache/bodyct/experiments/emphysema_subtyping_t8610/steve/tr.csv", type=str)

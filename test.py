@@ -31,8 +31,9 @@ def run_testing_job():
     parser.add_argument("--model_path",
                         default="/mnt/netcache/bodyct/experiments/emphysema_subtyping_t8610/lightning_models/",
                         type=str)
-    parser.add_argument("--workers", default=0, type=int)
-    parser.add_argument("--batch_size", default=1, type=int)
+    parser.add_argument("--target_size", default=(128, 224, 288), type=tuple)
+    parser.add_argument("--workers", default=2, type=int)
+    parser.add_argument("--batch_size", default=4, type=int)
     parser.add_argument("--local_rank", default=0, type=int,
                         help="this argument is not used and should be ignored")
     parser = pytorch_lightning.Trainer.add_argparse_args(parser)

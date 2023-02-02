@@ -434,13 +434,14 @@ class ScanRegLightningModule(pl.LightningModule):
         with torch.no_grad():
             scans = batch["image"].unsqueeze(1)
             lungs = batch["lung_mask"].unsqueeze(1).float()
+            ess = batch["ess_mask"].unsqueeze(1).float()
             crop_slices = batch["crop_slice"]
             original_size = batch["original_size"]
             dense_outs, reg_outs = self.forward(scans, lungs)
-            cle_dense_outs = F.interpolate(dense_outs[0], size=scans.shape[-3:], mode='trilinear', align_corners=True)  * lungs
-            pse_dense_outs = F.interpolate(dense_outs[1], size=scans.shape[-3:], mode='trilinear', align_corners=True)  * lungs
-            cle_precentages = reg_outs[0]
-            pse_precentages = reg_outs[1]
+            cle_dense_outs = F.interpolate(dense_outs[0], size=scans.shape[-3:], mode='trilinear', align_corners=True) * ess
+            pse_dense_outs = F.interpolate(dense_outs[1], size=scans.shape[-3:], mode='trilinear', align_corners=True) * ess
+            cle_precentages = cle_dense_outs.sum() / lungs.sum()
+            pse_precentages = pse_dense_outs.sum() / lungs.sum()
             return {
                 "cle_dense_outs": cle_dense_outs,
                 "pse_dense_outs": pse_dense_outs,

@@ -2,7 +2,7 @@ import warnings
 warnings.filterwarnings("ignore")
 import logging
 
-logging.getLogger("pytorch_lightning").setLevel(logging.CRITICAL)
+logging.getLogger("pytorch_lightning").setLevel(logging.ERROR)
 
 
 import matplotlib

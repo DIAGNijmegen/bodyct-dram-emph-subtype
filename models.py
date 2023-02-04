@@ -440,8 +440,8 @@ class ScanRegLightningModule(pl.LightningModule):
             dense_outs, reg_outs = self.forward(scans, lungs)
             cle_dense_outs = F.interpolate(dense_outs[0], size=scans.shape[-3:], mode='trilinear', align_corners=True) * ess
             pse_dense_outs = F.interpolate(dense_outs[1], size=scans.shape[-3:], mode='trilinear', align_corners=True) * ess
-            cle_precentages = cle_dense_outs.sum() / lungs.sum()
-            pse_precentages = pse_dense_outs.sum() / lungs.sum()
+            cle_precentages = cle_dense_outs.view(cle_dense_outs.shape[0], -1).sum(-1) / lungs.sum()
+            pse_precentages = pse_dense_outs.view(pse_dense_outs.shape[0], -1).sum(-1) / lungs.sum()
             return {
                 "cle_dense_outs": cle_dense_outs,
                 "pse_dense_outs": pse_dense_outs,

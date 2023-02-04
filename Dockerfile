@@ -17,36 +17,25 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 		cmake \
 		curl \
 		dnsutils \
-		ffmpeg \
 		gcc \
 		git \
         ca-certificates \
-		openssh-server \
         libatlas-base-dev \
-		net-tools   \
         libblas-dev \
         libopenblas-dev \
         liblapack-dev \
-        pkg-config apt-transport-https \
+        pkg-config \
         openjdk-8-jdk \
 		protobuf-compiler \
 		g++ libgomp1 \
-		swig \
-		rsync \
         python-dev \
         python3-pip \
         python3.8 \
         python3.8-dev \
 	    python3-pydot-ng \
-		tmux screen \
         htop \
-		nano vim \
         python3-pydot \
-		wget \
         bzip2 \
-        graphviz \
-        python3-tk \ 
-        g++ ninja-build make \
         zip unzip \
         libssl-dev zlib1g-dev \
         libncurses5-dev libncursesw5-dev libreadline-dev libsqlite3-dev \
@@ -67,15 +56,7 @@ RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.8 1 
    
 RUN python -m pip install --upgrade --force pip
 
-
-RUN mkdir /var/run/sshd && \
-    mkdir /root/.ssh && \
-    echo 'root:root' |chpasswd && \
-    sed -ri 's/UsePAM yes/#UsePAM yes/g' /etc/ssh/sshd_config && \
-    sed -ri 's/^#?PermitRootLogin\s+.*/PermitRootLogin yes/' /etc/ssh/sshd_config && \
-    sed -ri 's/#PermitUserEnvironment no/PermitUserEnvironment yes/g' /etc/ssh/sshd_config
-
-
+RUN mkdir /root/python-packages
 
 # === Install python libraries ===
 COPY install_files/requirements.in /root/python-packages/

@@ -70,7 +70,7 @@ class SubtypingInference(Dataset):
         ret = {
             "image": scan.astype(np.int16),
             "lung_mask": lung.astype(np.bool),
-            "ess_mask": np.logical_and(scan < -910, lung).astype(np.bool),
+            "ess_mask": np.logical_and(scan < -910, lung > 0).astype(np.bool),
             "crop_slice": np.asarray([(ss.start, ss.stop) for ss in slices]),
             "original_size": np.asarray(original_size),
             "uid": series_uid

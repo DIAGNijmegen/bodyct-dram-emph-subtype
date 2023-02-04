@@ -19,7 +19,6 @@ from pytorch_lightning.loggers import LightningLoggerBase
 from pytorch_lightning.loggers import TensorBoardLogger
 import math
 from omegaconf import OmegaConf
-from pkg_resources import resource_filename
 from scipy import ndimage
 import hydra
 import torch.distributed as dist

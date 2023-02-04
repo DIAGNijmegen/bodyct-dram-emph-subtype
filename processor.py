@@ -2,8 +2,6 @@ import warnings
 warnings.filterwarnings("ignore")
 import logging
 
-logging.getLogger("pytorch_lightning").setLevel(logging.ERROR)
-
 
 import matplotlib
 from argparse import ArgumentParser
@@ -16,6 +14,13 @@ from functools import reduce
 import json
 
 matplotlib.use('Agg')
+logging.basicConfig(
+    level=logging.ERROR,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    handlers=[
+        logging.StreamHandler()
+    ]
+)
 
 
 from models import ScanRegLightningModule, SubtypeDataModule
@@ -33,12 +38,15 @@ def ratio_to_label(ratio, ratio_mapping):
 
 
 def run_testing_job():
-    # input_image_path = r'D:\workspace\datasets\COPDGene\images/'
-    # input_lobe_path = r'D:\workspace\datasets\COPDGene\lobes/'
-    # output_path = r'D:\workspace\datasets\COPDGene\outputs/'
-    #
-    # # ckp_path = 'best.pth'
-    # ckp_path = r'D:\newckp.ckpt'
+    # input_image_path = r'D:\test_images\1\image/'
+    # input_lobe_path = r'D:\test_images\1\lobe/'
+    # centrilobular_json_path = 'D:/test_images/output/centrilobular-emphysema-score.json'
+    # paraseptal_json_path = 'D:/test_images/output/araseptal-emphysema-score.json'
+    # output_json_path = 'D:/test_images/output/results.json'
+    # output_centrilobular = 'D:/test_images/output/images/centrilobular-emphysema-heatmap/'
+    # output_paraseptal = 'D:/test_images/output/images/paraseptal-emphysema-heatmap/'
+    # ckp_path = 'best.pth'
+
 
     input_image_path = '/input/images/ct/'
     input_lobe_path = '/input/images/pulmonary-lobes/'

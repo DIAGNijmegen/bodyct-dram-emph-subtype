@@ -81,7 +81,7 @@ USER algorithm
 
 WORKDIR /opt/algorithm
 
-
+USER root
 COPY . /opt/algorithm/
 
 RUN chmod +x /opt/algorithm/run.sh

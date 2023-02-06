@@ -15,8 +15,6 @@ ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get update && apt-get install -y --no-install-recommends \
         build-essential \
 		cmake \
-		curl \
-		dnsutils \
 		gcc \
 		git \
         ca-certificates \
@@ -24,24 +22,20 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         libblas-dev \
         libopenblas-dev \
         liblapack-dev \
-        pkg-config \
         openjdk-8-jdk \
-		protobuf-compiler \
 		g++ libgomp1 \
         python-dev \
         python3-pip \
         python3.8 \
         python3.8-dev \
-	    python3-pydot-ng \
         htop \
-        python3-pydot \
         bzip2 \
         zip unzip \
         libssl-dev zlib1g-dev \
         libncurses5-dev libncursesw5-dev libreadline-dev libsqlite3-dev \
         libgdbm-dev libbz2-dev \
 		libdb5.3-dev libexpat1-dev liblzma-dev tk-dev \
-        gcovr libffi-dev uuid-dev \
+        libffi-dev \
 		&& apt-get clean \
 		&& rm -rf /var/lib/apt/lists/*
 
@@ -77,11 +71,10 @@ RUN mkdir -p /opt/algorithm /input /output \
 
 RUN ldconfig
 
-USER algorithm
+USER root
 
 WORKDIR /opt/algorithm
 
-USER root
 COPY . /opt/algorithm/
 
 RUN chmod +x /opt/algorithm/run.sh

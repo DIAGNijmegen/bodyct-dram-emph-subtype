@@ -84,8 +84,9 @@ WORKDIR /opt/algorithm
 
 COPY . /opt/algorithm/
 
+RUN chmod +x /opt/algorithm/run.sh
 
-ENTRYPOINT ["/usr/bin/python3", "/opt/algorithm/processor.py"]
+ENTRYPOINT ["/opt/algorithm/run.sh"]
 
 # These labels are required
 LABEL nl.diagnijmegen.rse.algorithm.name=emphysema_subtyping

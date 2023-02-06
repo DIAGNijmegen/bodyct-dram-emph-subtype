@@ -88,6 +88,7 @@ RUN chmod +x /opt/algorithm/run.sh
 
 ENTRYPOINT ["/opt/algorithm/run.sh"]
 
+
 # These labels are required
 LABEL nl.diagnijmegen.rse.algorithm.name=emphysema_subtyping
 LABEL nl.diagnijmegen.rse.algorithm.author="Weiyi Xie"

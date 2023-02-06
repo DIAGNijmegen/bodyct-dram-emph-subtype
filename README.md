@@ -18,7 +18,6 @@ The proposed model can automatically identify severity-based emphysema subtypes 
 
 ## Usage
  - Use `train.py` for training. The training, testing and prediction scripts were all implemented using pytorch, and pytorch-lightning library.
- - Please check https://github.com/Tencent/MedicalNet for how to load pretrained ResNet weights.
  - Please check `\install_files\requirements.in` for 3rd-party libraries to be installed to run the scripts.
  - We provide the classification and regression training strategies. Please switch to `med3d` in `--model_arch` cli argument.
  - The class and regression activation maps were generated during training or testing.

@@ -14,7 +14,8 @@ ENV DEBIAN_FRONTEND noninteractive
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
         build-essential \
-		cmake \
+        sudo \
+        cmake \
 		gcc \
 		git \
         ca-certificates \
@@ -62,7 +63,7 @@ RUN cd /root/python-packages && \
 
 
 # === Set some environment variables and options. ===
-RUN groupadd -r algorithm && useradd -m --no-log-init -r -g algorithm algorithm && gpasswd -a algorithm sudo
+RUN groupadd -r algorithm && useradd -m --no-log-init -r -g algorithm algorithm && adduser algorithm sudo
 
 RUN mkdir -p /opt/algorithm /input /output \
     && chown algorithm:algorithm /opt/algorithm /input /output

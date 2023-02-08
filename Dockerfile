@@ -63,7 +63,8 @@ RUN cd /root/python-packages && \
 
 
 # === Set some environment variables and options. ===
-RUN groupadd -r algorithm && useradd -m --no-log-init -r -g algorithm algorithm && adduser algorithm sudo
+RUN useradd -m algorithm && echo "algorithm:algorithm" | chpasswd && adduser algorithm sudo
+RUN groupadd algorithm && usermod -a -G algorithm algorithm
 
 RUN mkdir -p /opt/algorithm /input /output \
     && chown algorithm:algorithm /opt/algorithm /input /output

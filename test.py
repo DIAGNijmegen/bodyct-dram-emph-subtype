@@ -27,7 +27,7 @@ def run_testing_job():
     parser.add_argument("--valid_csv",
                         default="/mnt/netcache/bodyct/experiments/emphysema_subtyping_t8610/steve/val.csv", type=str)
     parser.add_argument("--test_csv",
-                        default="/mnt/netcache/bodyct/experiments/emphysema_subtyping_t8610/steve/te.csv", type=str)
+                        default="/mnt/netcache/bodyct/experiments/emphysema_subtyping_t8610/steve/te_duplicated_lastone.csv", type=str)
     parser.add_argument("--model_path",
                         default="/mnt/netcache/bodyct/experiments/emphysema_subtyping_t8610/lightning_models/",
                         type=str)
@@ -45,7 +45,7 @@ def run_testing_job():
     args = parser.parse_args()
     args.exp_name = f"subtyping_{args.model_arch}"
     exp_path = Path(args.model_path + f"/{args.exp_name}/")
-    ckp_path = exp_path / "checkpoints" / args.ckp
+    ckp_path = exp_path / "checkpoints" / f"epoch={args.ckp}.ckpt"
 
     logging.basicConfig(
         level=logging.DEBUG,

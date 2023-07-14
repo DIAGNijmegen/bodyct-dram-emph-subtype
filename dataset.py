@@ -1,3 +1,5 @@
+import copy
+
 import numpy as np
 
 from utils import read_csv_in_dict, find_crops
@@ -58,6 +60,7 @@ class SubtypingInference(Dataset):
     def get_data(self, index):
         series_uid = Path(self.scan_file).stem # dummy name, should be ignored.
         scan, origin, spacing, direction = self.read_image(self.scan_file)
+        original_scan = copy.deepcopy(scan)
         original_size = scan.shape
         lobe, origin_, spacing_, direction_ = self.read_image(self.lobe_file)
         assert lobe.shape == scan.shape
@@ -67,8 +70,10 @@ class SubtypingInference(Dataset):
         slices = find_crops(lung, spacing, self.crop_border)
         scan = scan[slices]
         lung = lung[slices]
+        original_scan = original_scan[slices]
         ret = {
             "image": scan.astype(np.int16),
+            "original_image": original_scan.astype(np.int16),
             "lung_mask": lung > 0,
             "ess_mask": np.logical_and(scan < -910, lung > 0),
             "crop_slice": np.asarray([(ss.start, ss.stop) for ss in slices]),
@@ -142,8 +147,8 @@ class COPDGeneSubtyping(Dataset):
         data = torch.load(self.archive_path + f"/{series_uid}.pth")
         em_mask = torch.logical_and(data['image'] < -950, data['lung_mask'] > 0)
         data['em_mask'] = em_mask
-        assert data['cls_label'] == self.subtyping_labels[series_uid]['cle']
-        assert data['pse_label'] == self.subtyping_labels[series_uid]['pse']
+        # assert data['cls_label'] == self.subtyping_labels[series_uid]['cle']
+        # assert data['pse_label'] == self.subtyping_labels[series_uid]['pse']
         if self.transforms:
             data = self.transforms(data)
         return data

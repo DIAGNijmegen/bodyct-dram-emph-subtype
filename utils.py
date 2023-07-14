@@ -15,7 +15,6 @@ import torch
 from matplotlib import pyplot as plt
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 
-from pytorch_lightning.loggers import LightningLoggerBase
 from pytorch_lightning.loggers import TensorBoardLogger
 import math
 from omegaconf import OmegaConf
@@ -250,7 +249,7 @@ def load_state_dict_greedy(model: torch.nn.Module, state_dict_to_load: Dict):
     model.load_state_dict(model_state_dict, strict=False)
 
 
-def extract_logger(loggers: List[LightningLoggerBase], logger_class: Type[LightningLoggerBase]):
+def extract_logger(loggers, logger_class):
     if loggers is None:
         return
 

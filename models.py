@@ -25,6 +25,7 @@ import torch.distributed as dist
 from pathlib import Path
 from sklearn.metrics import confusion_matrix
 from pytorch_lightning.trainer.states import RunningStage
+from ptflops import get_model_complexity_info
 
 TRAIN_PHASE = RunningStage.TRAINING
 VALID_PHASE = RunningStage.VALIDATING
@@ -173,7 +174,11 @@ class ScanCLSLightningModule(pl.LightningModule):
 
         self.save_hyperparameters()
         self.trace = True
-        logging.info(self.model)
+
+        macs, params = get_model_complexity_info(self.model, (1, ) + args.target_size, as_strings=True,
+                                                 print_per_layer_stat=True, verbose=True)
+        logging.info('{:<30}  {:<8}'.format('Computational complexity: ', macs))
+        logging.info('{:<30}  {:<8}'.format('Number of parameters: ', params))
 
     @property
     def tb_logger(self):
@@ -415,7 +420,10 @@ class ScanRegLightningModule(pl.LightningModule):
         self.bce = BinaryCrossEntropy()
         self.beta = 0.7338
         self.gamma = 0.2578
-        logging.info(self.model)
+        macs, params = get_model_complexity_info(self.model, (1, ) + args.target_size, as_strings=True,
+                                                 print_per_layer_stat=True, verbose=True)
+        print('{:<30}  {:<8}'.format('Computational complexity: ', macs))
+        print('{:<30}  {:<8}'.format('Number of parameters: ', params))
 
     @property
     def tb_logger(self):
@@ -467,8 +475,7 @@ class ScanRegLightningModule(pl.LightningModule):
         cls_dense_predictions = F.interpolate(dense_outs[0], size=lungs.shape[-3:], mode='trilinear').cpu()
         pse_dense_predictions = F.interpolate(dense_outs[1], size=lungs.shape[-3:], mode='trilinear').cpu()
         for scan, lung, em, cls_dense_prediction, pse_dense_prediction, \
-            cls_label, pse_label, pred_cls_label, pred_pse_label, index in zip(scans,
-                                                                               lungs,
+            cls_label, pse_label, pred_cls_label, pred_pse_label, index in zip(scans, lungs,
                                                                                ems,
                                                                                cls_dense_predictions,
                                                                                pse_dense_predictions,
@@ -477,6 +484,7 @@ class ScanRegLightningModule(pl.LightningModule):
                                                                                pred_cls_labels,
                                                                                pred_pse_labels,
                                                                                indices):
+
             scan_np = scan.cpu().squeeze(0).numpy()
             lung_np = lung.cpu().squeeze(0).numpy()
             em_np = em.cpu().squeeze(0).numpy()
@@ -585,9 +593,8 @@ class ScanRegLightningModule(pl.LightningModule):
                         "cle_labels": cle_labels.detach(), "pse_labels": pse_labels.detach(), "index": indices}
             else:
                 if self.trainer.is_global_zero:
-                    if batch_idx < 50:
-                        with torch.no_grad():
-                            self._draw_predictions(scans, lungs, ems, dense_outs,
+                    with torch.no_grad():
+                        self._draw_predictions(scans, lungs, ems, dense_outs,
                                                    cle_labels, pse_labels, pred_cle_labels, pred_pse_labels, indices,
                                                    stage)
 

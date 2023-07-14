@@ -212,7 +212,7 @@ class ResNetSegCls(nn.Module):
         self.layer4 = self._make_layer(
             block, 512, layers[3], shortcut_type, stride=1, dilation=4)
 
-        self.us1 = UpsampleConvBlock5d([512 * block.expansion + 64, 64],
+        self.us1 = UpsampleConvBlock5d([(512 + 64) * block.expansion, 64],
                                        [64, 64],
                                        1, (2, 2, 2),
                                        (3, 3), True, (1, 1),
@@ -311,7 +311,7 @@ class ResNetSegReg(nn.Module):
         self.layer4 = self._make_layer(
             block, 512, layers[3], shortcut_type, stride=1, dilation=4)
 
-        self.us1 = UpsampleConvBlock5d([512 * block.expansion + 64, 64],
+        self.us1 = UpsampleConvBlock5d([(512 + 64) * block.expansion, 64],
                                        [64, 64],
                                        1, (2, 2, 2),
                                        (3, 3), True, (1, 1),
@@ -380,7 +380,10 @@ class ResNetSegReg(nn.Module):
         xup2 = self.us2(xup1, x)
         xup3 = self.us3(xup2)
         dense_outs = [torch.sigmoid(fc(xup3)) for fc in self.fcs]
-        lungs = F.interpolate(lungs, xup3.shape[-3:], mode='nearest')
+        if lungs is None:
+            lungs = torch.ones_like(x)
+        else:
+            lungs = F.interpolate(lungs, xup3.shape[-3:], mode='nearest')
         reg_outs = [(dout * lungs).view(B, -1).sum(dim=-1) / lungs.view(B, -1).sum(dim=-1) for dout in dense_outs]
         return dense_outs, reg_outs
 
@@ -391,6 +394,17 @@ def resnet34segcls(**kwargs):
     model = ResNetSegCls(BasicBlock, [3, 4, 6, 3], **kwargs)
     return model
 
+def resnet50segcls(**kwargs):
+    """Constructs a ResNet-34 model.
+    """
+    model = ResNetSegCls(Bottleneck, [3, 4, 6, 3], **kwargs)
+    return model
+
+def resnet18segcls(**kwargs):
+    """Constructs a ResNet-34 model.
+    """
+    model = ResNetSegCls(BasicBlock, [2, 2, 2, 2], **kwargs)
+    return model
 
 def resnet34segreg(**kwargs):
     """Constructs a ResNet-34 model.
@@ -398,6 +412,17 @@ def resnet34segreg(**kwargs):
     model = ResNetSegReg(BasicBlock, [3, 4, 6, 3], **kwargs)
     return model
 
+def resnet50segreg(**kwargs):
+    """Constructs a ResNet-34 model.
+    """
+    model = ResNetSegReg(Bottleneck, [3, 4, 6, 3], **kwargs)
+    return model
+
+def resnet18segreg(**kwargs):
+    """Constructs a ResNet-34 model.
+    """
+    model = ResNetSegReg(BasicBlock, [2, 2, 2, 2], **kwargs)
+    return model
 
 class ResNet(nn.Module):
 

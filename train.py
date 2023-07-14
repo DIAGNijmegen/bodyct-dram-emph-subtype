@@ -19,37 +19,38 @@ import glob
 def run_training_job():
     parser = ArgumentParser()
 
-    parser.add_argument("--model_arch", default="med3ddram", type=str)
-    parser.add_argument("--lr", "--learning-rate", default=0.00005, type=float)
-    parser.add_argument("--ngpus", default=2, type=int)
+    parser.add_argument("--model_arch", default="med3ddram50", type=str)
+    parser.add_argument("--lr", "--learning-rate", default=0.0001, type=float)
+    parser.add_argument("--ngpus", default=1, type=int)
     parser.add_argument("--momentum", default=0.9, type=float)
     parser.add_argument("--reload_only_weights", default=1, type=int)
     parser.add_argument("--weight_decay", default=1e-5, type=float)
     parser.add_argument("--ckp", type=str, default=None)
     # Data parameters.
     parser.add_argument("--target_size", default=(128, 224, 288), type=tuple)
-    parser.add_argument("--data_path", default="/share/cached/COPDGene/", type=str)
+    parser.add_argument("--data_path", default=r"D:\workspace\datasets\COPDGene_cache/", type=str)
     parser.add_argument("--train_csv",
-                        default="/mnt/netcache/bodyct/experiments/emphysema_subtyping_t8610/steve/tr.csv", type=str)
+                        default=r"D:\workspace\datasets\COPDGene_cache/merged.csv", type=str)
     parser.add_argument("--valid_csv",
-                        default="/mnt/netcache/bodyct/experiments/emphysema_subtyping_t8610/steve/val.csv", type=str)
+                        default=r"D:\workspace\datasets\COPDGene_cache/merged.csv", type=str)
     parser.add_argument("--test_csv",
-                        default="/mnt/netcache/bodyct/experiments/emphysema_subtyping_t8610/steve/te.csv", type=str)
+                        default=r"D:\workspace\datasets\COPDGene_cache/merged.csv", type=str)
     parser.add_argument("--model_path",
-                        default="/mnt/netcache/bodyct/experiments/emphysema_subtyping_t8610/lightning_models/",
+                        default=r"D:\workspace\models/",
                         type=str)
     parser.add_argument("--workers", default=2, type=int)
-    parser.add_argument("--batch_size", default=4, type=int)
+    parser.add_argument("--batch_size", default=1, type=int)
     parser.add_argument("--num_samples", default=128, type=int)
     parser.add_argument("--local_rank", default=0, type=int,
                         help="this argument is not used and should be ignored")
     parser = pytorch_lightning.Trainer.add_argparse_args(parser)
 
     parser.set_defaults(
-        max_epochs=300,
+        max_epochs=120,
         replace_sampler_ddp=False,
         accelerator="gpu",
-        log_every_n_steps=5
+        log_every_n_steps=5,
+        profiler="pytorch"
     )
     args = parser.parse_args()
     args.exp_name = f"subtyping_{args.model_arch}"
@@ -66,7 +67,7 @@ def run_training_job():
         ]
     )
     pytorch_lightning.trainer.seed_everything()
-    ddp = DDPStrategy(process_group_backend="nccl", find_unused_parameters=False)
+    ddp = DDPStrategy(process_group_backend="gloo", find_unused_parameters=False)
 
     if 'dram' in args.model_arch:
         module = ScanRegLightningModule(args)

@@ -1,0 +1,2 @@
+_target_: med3d.resnet18segcls
+n_classes: [6, 3]

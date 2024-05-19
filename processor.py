@@ -2,7 +2,8 @@ import warnings
 warnings.filterwarnings("ignore")
 import logging
 
-
+import platform
+import sys
 import matplotlib
 from argparse import ArgumentParser
 import pytorch_lightning
@@ -36,26 +37,22 @@ def ratio_to_label(ratio, ratio_mapping):
              if k[0] <= ratio and ratio < k[1]][0]
     return label
 
-
+def find_backend():
+    os_name = platform.system()
+    if os_name == 'Windows':
+        backend = "gloo"
+    elif os_name == 'Linux' or os_name == 'Darwin':
+        backend = "nccl"
+    else:
+        if sys.platform.startswith('win'):
+            backend = "gloo"
+        elif sys.platform.startswith('linux') or sys.platform.startswith('darwin'):
+            backend = "nccl"
+        else:
+            raise NotImplementedError("does not support current platform.")  
+    return backend
+        
 def run_testing_job():
-    # input_image_path = r'D:\test_images\3\image/'
-    # input_lobe_path = r'D:\test_images\3\lobe/'
-    # centrilobular_json_path = 'D:/test_images/output/centrilobular-emphysema-score.json'
-    # paraseptal_json_path = 'D:/test_images/output/araseptal-emphysema-score.json'
-    # output_json_path = 'D:/test_images/output/results.json'
-    # output_centrilobular = 'D:/test_images/output/images/centrilobular-emphysema-heatmap/'
-    # output_paraseptal = 'D:/test_images/output/images/paraseptal-emphysema-heatmap/'
-    # ckp_path = 'best.pth'
-
-
-    # input_image_path = '/input/images/ct/'
-    # input_lobe_path = '/input/images/pulmonary-lobes/'
-    # centrilobular_json_path = '/output/centrilobular-emphysema-score.json'
-    # paraseptal_json_path = '/output/araseptal-emphysema-score.json'
-    # output_json_path ='/output/results.json'
-    # output_centrilobular = '/output/images/centrilobular-emphysema-heatmap/'
-    # output_paraseptal = '/output/images/paraseptal-emphysema-heatmap/'
-
     ckp_path = 'best.ckpt'
     parser = ArgumentParser()
     parser.add_argument("--ngpus", default=1, type=int)
@@ -89,7 +86,8 @@ def run_testing_job():
 
     load_state_dict_greedy(module, checkpoint['state_dict'])
     data_module = SubtypeDataModule(args)
-    ddp = DDPStrategy(process_group_backend="gloo", find_unused_parameters=False)
+
+    ddp = DDPStrategy(process_group_backend=find_backend(), find_unused_parameters=False)
     trainer = pytorch_lightning.Trainer.from_argparse_args(args, strategy=ddp,
                                                            sync_batchnorm=True,
                                                            logger=False,

@@ -18,7 +18,9 @@ The proposed model can automatically identify severity-based emphysema subtypes 
 
 ## Usage
  - Use `train.py` for training. The training, testing and prediction scripts were all implemented using pytorch, and pytorch-lightning library.
- - Please check `\install_files\requirements.in` for 3rd-party libraries to be installed to run the scripts.
+ - Use `processor.py` or `run.sh` for inference. both `processor.py` and `run.sh` require you define the input data (ct image and its lobe segmentation) using `--scan_path` and `--lobe_path`, and the output path using `--output_path` arguments.
+ - The code supports inference and training using multiple GPUs. Please use `--ngpus` and `--workers` to specify the number of GPUs and the number of workers for the executation. Check line `60` and `70` for details of possible input arguments.
+ - Please check `\install_files\requirements.in` for 3rd-party libraries to be installed to run the scripts. Run `pip install -r install_files/requirements.in` to install dependencies. The code has been tested with python 3.8 version. If you want to install torch with GPU support, please use `--extra-index-url=https://download.pytorch.org/whl/cu113` (chose the cuda version you have already installed, e.g., `11.3` in this example).
  - We provide the classification and regression training strategies. Please switch to `med3d` in `--model_arch` cli argument.
  - The class and regression activation maps were generated during training or testing.
  - For the Grand-challenge [algorithm](https://grand-challenge.org/algorithms/weakly-supervised-emphysema-subtyping/), we use the prediction mode in pytorch-lightning for outputs. 

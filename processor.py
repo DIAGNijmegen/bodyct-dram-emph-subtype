@@ -2,7 +2,8 @@ import warnings
 warnings.filterwarnings("ignore")
 import logging
 
-
+import platform
+import sys
 import matplotlib
 from argparse import ArgumentParser
 import pytorch_lightning
@@ -36,29 +37,22 @@ def ratio_to_label(ratio, ratio_mapping):
              if k[0] <= ratio and ratio < k[1]][0]
     return label
 
-
+def find_backend():
+    os_name = platform.system()
+    if os_name == 'Windows':
+        backend = "gloo"
+    elif os_name == 'Linux' or os_name == 'Darwin':
+        backend = "nccl"
+    else:
+        if sys.platform.startswith('win'):
+            backend = "gloo"
+        elif sys.platform.startswith('linux') or sys.platform.startswith('darwin'):
+            backend = "nccl"
+        else:
+            raise NotImplementedError("does not support current platform.")  
+    return backend
+        
 def run_testing_job():
-    input_image_path = r'D:\test_images\3\image/'
-    input_lobe_path = r'D:\test_images\3\lobe/'
-    centrilobular_json_path = 'D:/test_images/output/centrilobular-emphysema-score.json'
-    paraseptal_json_path = 'D:/test_images/output/araseptal-emphysema-score.json'
-    output_json_path = 'D:/test_images/output/results.json'
-    output_centrilobular = 'D:/test_images/output/images/centrilobular-emphysema-heatmap/'
-    output_paraseptal = 'D:/test_images/output/images/paraseptal-emphysema-heatmap/'
-    # ckp_path = 'best.pth'
-
-
-    # input_image_path = '/input/images/ct/'
-    # input_lobe_path = '/input/images/pulmonary-lobes/'
-    # centrilobular_json_path = '/output/centrilobular-emphysema-score.json'
-    # paraseptal_json_path = '/output/araseptal-emphysema-score.json'
-    # output_json_path ='/output/results.json'
-    # output_centrilobular = '/output/images/centrilobular-emphysema-heatmap/'
-    # output_paraseptal = '/output/images/paraseptal-emphysema-heatmap/'
-
-    Path(output_centrilobular).mkdir(parents=True, exist_ok=True)
-    Path(output_paraseptal).mkdir(parents=True, exist_ok=True)
-
     ckp_path = 'best.ckpt'
     parser = ArgumentParser()
     parser.add_argument("--ngpus", default=1, type=int)
@@ -66,8 +60,9 @@ def run_testing_job():
     parser.add_argument("--workers", default=0, type=int)
     parser.add_argument("--batch_size", default=2, type=int)
     parser.add_argument("--target_size", default=(128, 224, 288), type=tuple)
-    parser.add_argument("--scan_path", default=input_image_path, type=str)
-    parser.add_argument("--lobe_path", default=input_lobe_path, type=str)
+    parser.add_argument("--scan_path", default='/input/images/ct/', type=str)
+    parser.add_argument("--lobe_path", default='/input/images/pulmonary-lobes/', type=str)
+    parser.add_argument("--output_path", default='/output', type=str)
     parser.add_argument("--local_rank", default=0, type=int,
                         help="this argument is not used and should be ignored")
     parser = pytorch_lightning.Trainer.add_argparse_args(parser)
@@ -78,13 +73,21 @@ def run_testing_job():
     )
     args = parser.parse_args()
 
+    centrilobular_json_path = f'{args.output_path}/centrilobular-emphysema-score.json'
+    paraseptal_json_path = f'{args.output_path}/araseptal-emphysema-score.json'
+    output_json_path = f'{args.output_path}/results.json'
+    output_centrilobular = f'{args.output_path}/images/centrilobular-emphysema-heatmap/'
+    output_paraseptal = f'{args.output_path}/images/paraseptal-emphysema-heatmap/'
+    Path(output_centrilobular).mkdir(parents=True, exist_ok=True)
+    Path(output_paraseptal).mkdir(parents=True, exist_ok=True)
     module = ScanRegLightningModule(args)
 
     checkpoint = torch.load(ckp_path, map_location='cpu')
 
     load_state_dict_greedy(module, checkpoint['state_dict'])
     data_module = SubtypeDataModule(args)
-    ddp = DDPStrategy(process_group_backend="gloo", find_unused_parameters=False)
+
+    ddp = DDPStrategy(process_group_backend=find_backend(), find_unused_parameters=False)
     trainer = pytorch_lightning.Trainer.from_argparse_args(args, strategy=ddp,
                                                            sync_batchnorm=True,
                                                            logger=False,

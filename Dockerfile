@@ -58,7 +58,7 @@ COPY install_files/requirements.in /root/python-packages/
 
 
 RUN cd /root/python-packages && \
-    pip install -r requirements.in --verbose --find-links https://download.pytorch.org/whl/torch_stable.html  --find-links https://data.dgl.ai/wheels/repo.html && \
+    pip install -r requirements.in --extra-index-url https://download.pytorch.org/whl/cu113 --verbose --find-links https://download.pytorch.org/whl/torch_stable.html  --find-links https://data.dgl.ai/wheels/repo.html && \
     rm -rf ~/.cache/pip*
 
 

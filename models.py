@@ -10,7 +10,6 @@ from pytorch_lightning.loggers import TensorBoardLogger
 from utils import get_model_by_name
 import torch.nn.functional as F
 from dataset import COPDGeneSubtyping, SubtypingInference
-from torch.utils.data.sampler import WeightedRandomSampler
 from torch.utils.data import DistributedSampler
 from metrics import BinaryDice, BinaryCrossEntropy
 from utils import extract_logger, plot_to_numpy_array, save_image, cat_all_gather
@@ -25,7 +24,6 @@ import torch.distributed as dist
 from pathlib import Path
 from sklearn.metrics import confusion_matrix
 from pytorch_lightning.trainer.states import RunningStage
-from ptflops import get_model_complexity_info
 
 TRAIN_PHASE = RunningStage.TRAINING
 VALID_PHASE = RunningStage.VALIDATING
@@ -174,11 +172,6 @@ class ScanCLSLightningModule(pl.LightningModule):
 
         self.save_hyperparameters()
         self.trace = True
-
-        macs, params = get_model_complexity_info(self.model, (1, ) + args.target_size, as_strings=True,
-                                                 print_per_layer_stat=True, verbose=True)
-        logging.info('{:<30}  {:<8}'.format('Computational complexity: ', macs))
-        logging.info('{:<30}  {:<8}'.format('Number of parameters: ', params))
 
     @property
     def tb_logger(self):
@@ -420,10 +413,6 @@ class ScanRegLightningModule(pl.LightningModule):
         self.bce = BinaryCrossEntropy()
         self.beta = 0.7338
         self.gamma = 0.2578
-        macs, params = get_model_complexity_info(self.model, (1, ) + args.target_size, as_strings=True,
-                                                 print_per_layer_stat=True, verbose=True)
-        print('{:<30}  {:<8}'.format('Computational complexity: ', macs))
-        print('{:<30}  {:<8}'.format('Number of parameters: ', params))
 
     @property
     def tb_logger(self):

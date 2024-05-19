@@ -35,15 +35,12 @@ class SubtypingInference(Dataset):
         self.keep_sorted = keep_sorted
         self.transforms = transforms
         self.crop_border = crop_border
-        all_scans = glob.glob(self.scan_path + '/*.mha', recursive=False)
-        assert len(all_scans) == 1 # for grand-challenge
-
-        self.scan_file = all_scans[0]
-        self.lobe_file = glob.glob(self.lobe_path + '/*.mha', recursive=False)[0]
+        self.scan_files = sorted(glob.glob(self.scan_path + '/*.mha', recursive=False))
+        self.lobe_files = sorted(glob.glob(self.lobe_path + '/*.mha', recursive=False))
         self.scan_meta_cache = {}
 
     def __len__(self):
-        return 1
+        return len(self.scan_files)
 
     def __getitem__(self, index):
         d = self.get_data(index)
@@ -58,12 +55,16 @@ class SubtypingInference(Dataset):
         return scan, origin, spacing, direction
 
     def get_data(self, index):
-        series_uid = Path(self.scan_file).stem # dummy name, should be ignored.
-        scan, origin, spacing, direction = self.read_image(self.scan_file)
+        scan_file = self.scan_files[index]
+        lobe_file = self.lobe_files[index]
+        scan_name = Path(scan_file).stem # dummy name, should be ignored.
+        scan, origin, spacing, direction = self.read_image(scan_file)
         original_scan = copy.deepcopy(scan)
         original_size = scan.shape
-        lobe, origin_, spacing_, direction_ = self.read_image(self.lobe_file)
-        assert lobe.shape == scan.shape
+        lobe_name = Path(lobe_file).stem
+        assert scan_name == lobe_name, "scan and lobe segmentation files have different names."
+        lobe, origin_, spacing_, direction_ = self.read_image(lobe_file)
+        assert lobe.shape == scan.shape, "scan and lobe segmentation have different shapes."
         lung = lobe > 0
         dlung = ndimage.binary_dilation(lung, ndimage.generate_binary_structure(3, 3), iterations=2)
         scan[dlung < 1e-7] = -2048
@@ -78,10 +79,10 @@ class SubtypingInference(Dataset):
             "ess_mask": np.logical_and(scan < -910, lung > 0),
             "crop_slice": np.asarray([(ss.start, ss.stop) for ss in slices]),
             "original_size": np.asarray(original_size),
-            "uid": series_uid
+            "uid": scan_name
         }
 
-        self.scan_meta_cache[series_uid] = {
+        self.scan_meta_cache[scan_name] = {
             "spacing": spacing,
             "origin": origin,
             "direction": direction

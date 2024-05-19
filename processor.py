@@ -89,7 +89,7 @@ def run_testing_job():
 
     load_state_dict_greedy(module, checkpoint['state_dict'])
     data_module = SubtypeDataModule(args)
-    ddp = DDPStrategy(process_group_backend="nccl", find_unused_parameters=False)
+    ddp = DDPStrategy(process_group_backend="gloo", find_unused_parameters=False)
     trainer = pytorch_lightning.Trainer.from_argparse_args(args, strategy=ddp,
                                                            sync_batchnorm=True,
                                                            logger=False,

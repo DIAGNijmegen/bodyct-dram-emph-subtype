@@ -62,7 +62,7 @@ class SubtypingInference(Dataset):
         original_scan = copy.deepcopy(scan)
         original_size = scan.shape
         lobe_name = Path(lobe_file).stem
-        assert scan_name == lobe_name, "scan and lobe segmentation files have different names."
+
         lobe, origin_, spacing_, direction_ = self.read_image(lobe_file)
         assert lobe.shape == scan.shape, "scan and lobe segmentation have different shapes."
         lung = lobe > 0

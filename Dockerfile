@@ -73,8 +73,10 @@ RUN ldconfig
 USER algorithm
 WORKDIR /opt/algorithm
 COPY . /opt/algorithm/
-RUN sudo chmod +x /opt/algorithm/run.sh
-ENTRYPOINT ["/opt/algorithm/run.sh"]
+# RUN sudo chmod +x /opt/algorithm/run.sh
+# ENTRYPOINT ["/opt/algorithm/run.sh"]
+ENTRYPOINT ["/usr/bin/python3", "/opt/algorithm/processor.py"]
+
 
 
 # These labels are required
